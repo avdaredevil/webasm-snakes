@@ -1,0 +1,29 @@
+{
+  "name": "snake-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": "please-use-yarn",
+    "yarn": ">= 1.19.1"
+  },
+  "scripts": {
+    "build:rust": "cargo build",
+    "package:rust": "wasm-pack build --target web",
+    "start": "yarn dev",
+    "dev": "yarn build:rust && yarn package:rust && node ./target/wasm32-unknown-unknown/debug/snake-game.js"
+  },
+  "author": "Apoorv Verma [AP]",
+  "license": "MIT",
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "1.6.0",
+    "copy-webpack-plugin": "11.0.0",
+    "html-webpack-plugin": "5.5.0",
+    "snake-game": "link:./pkg",
+    "text-encoding": "0.7.0",
+    "webpack": "5.74.0",
+    "webpack-cli": "4.10.0",
+    "webpack-dev-server": "4.9.3"
+  }
+}
