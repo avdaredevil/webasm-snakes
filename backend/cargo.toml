@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "A simple snake game"
 authors = ["Apoorv Verma [AP]"]
 edition = "2021"
-license = "None"
 repository = ""
 
 [lib]
