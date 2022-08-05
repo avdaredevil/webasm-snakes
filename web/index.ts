@@ -2,14 +2,12 @@ import init from "snake_game"
 import {GAME_CONFIG, scaleConfig} from "./config"
 import {GameController} from "./gameController"
 
-const animationStepsPerTick = 7
-
-function gameTick(controller: GameController, tickSpeed: number, i = 0) {
-  const isGameTick = i % animationStepsPerTick === 0
+function gameTick(controller: GameController, tickSpeed: number, animationStepsPerGameTick: number, i = 0) {
+  const isGameTick = i % animationStepsPerGameTick === 0
   window.apGame.tickThread = setTimeout(() => window.requestAnimationFrame(() => {
     controller.tick(isGameTick)
-    gameTick(controller, tickSpeed, i > 1e6 ? 0 : i + 1)
-  }), Math.max(tickSpeed / animationStepsPerTick, 1))
+    gameTick(controller, tickSpeed, animationStepsPerGameTick, i > 1e6 ? 0 : i + 1)
+  }), Math.max(tickSpeed / animationStepsPerGameTick, 1))
 }
 
 async function main() {
@@ -18,11 +16,11 @@ async function main() {
   const scale = minViewportSize / (GAME_CONFIG.cells.rows * GAME_CONFIG.cellSize + GAME_CONFIG.gameOffset * 2)
   console.log('Scaling game by', scale)
   const config = scaleConfig(GAME_CONFIG, scale)
-  const controller = new GameController(config)
+  const controller = new GameController(config, scale)
   controller.drawWorld()
   controller.drawSnake()
 
-  gameTick(controller, config.tickSpeed)
+  gameTick(controller, config.tickSpeed, config.animationStepsPerGameTick)
 }
 
 main().catch(e => console.error(e))

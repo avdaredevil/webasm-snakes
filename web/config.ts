@@ -3,7 +3,7 @@ export const GAME_CONFIG = {
     title: "AP-Snakes",
     htmlTitle: "Snakes by AP"
   },
-  cells: { rows: 100, cols: 50 },
+  cells: { rows: 35, cols: 50 },
   cellSize: 40,
   gameOffset: 30,
   colors: {
@@ -17,6 +17,7 @@ export const GAME_CONFIG = {
   },
   tickSpeed: 50,
   largeGameTilesThreshold: 1500,
+  animationStepsPerGameTick: 6,
 };
 export type GameConfig = typeof GAME_CONFIG;
 

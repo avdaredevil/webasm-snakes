@@ -84,9 +84,9 @@ export default (props: GameConfig['page']) => `
             }
             @keyframes shake-canvas {
                 0% {transform: translate(0, 0);}
-                25% {transform: translate(.25rem, 0);}
-                50% {transform: translate(0, .25rem);}
-                75% {transform: translate(-.25rem, 0);}
+                25% {transform: translate(.5rem, 0);}
+                50% {transform: translate(0, .5rem);}
+                75% {transform: translate(-.5rem, 0);}
                 100% {transform: translate(0, 0);}
             }
         </style>

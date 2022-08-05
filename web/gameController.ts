@@ -1,7 +1,7 @@
 import {World} from "snake_game"
 import {GameConfig} from "./config"
 import pageHtml, {linkFunctionality, updateScore} from "./pageHtml"
-import {Animation, DeathCellAnimation} from "./animation"
+import {Animation, DeathCellAnimation, FoodRayAnimation} from "./animation"
 
 declare global {
   interface Window {
@@ -9,6 +9,7 @@ declare global {
       tickThread?: NodeJS.Timer
       world: World
       canvas: HTMLCanvasElement
+      scale: number
     }
   }
 }
@@ -22,10 +23,10 @@ export class GameController {
   world: World
   ctx: CanvasRenderingContext2D
   animations: Animation[] = []
-  isDead = false
+  isDeadParts = 0
 
-  constructor(readonly config: GameConfig) {
-    const {canvas, world} = GameController.initWorld(config)
+  constructor(readonly config: GameConfig, scale: number) {
+    const {canvas, world} = GameController.initWorld(config, scale)
     this.canvas = canvas
     this.world = world
     this.ctx = canvas.getContext("2d")!
@@ -46,14 +47,14 @@ export class GameController {
         case "Enter":
           if (!isDead) return
           this.canvas.classList.remove("dead")
-          this.isDead = false
+          this.isDeadParts = 0
           updateScore(0, true)
           this.animations = []
           this.world = World.new(this.config.cells.rows, this.config.cells.cols)
       }
     })
   }
-  static initWorld(config: GameConfig): typeof window.apGame {
+  static initWorld(config: GameConfig, scale: number): typeof window.apGame {
     if (window.apGame) return window.apGame
 
     // Create a canvas element with correct dimensions
@@ -67,7 +68,7 @@ export class GameController {
     // Create a world and attach it to the canvas
     ;(window as any).setScore = updateScore
     const world = World.new(config.cells.rows, config.cells.cols)
-    return (window.apGame = {canvas, world})
+    return (window.apGame = {canvas, world, scale})
   }
   drawWorld(isDead = false) {
     const {world, canvas, ctx, config} = this
@@ -115,12 +116,14 @@ export class GameController {
       row: ~~(index / world.cols),
     }
   }
-  drawSnake() {
+  drawSnake(headDeathOffset = 0) {
     const {world, ctx, config} = this
     const {gameOffset, cellSize, colors} = config
     ctx.fillStyle = colors.snake
     ctx.beginPath()
-    for (const [idx, dir] of (world.snake() as Snake).body) {
+    let i = 0
+    for (const [idx] of (world.snake() as Snake).body) {
+      if (i++ < headDeathOffset) continue
       const {row, col} = this.getCoordFromIndex(idx)
       ctx.fillRect(
         gameOffset + col * cellSize,
@@ -130,6 +133,7 @@ export class GameController {
       )
     }
     ctx.stroke()
+    if (headDeathOffset > 0) return
 
     // Draw the head
     // console.log({snakeHead: world.snake_head(), snake: world.snake().body})
@@ -177,6 +181,14 @@ export class GameController {
     ctx.lineTo(offsetX + halfCell, offsetY + cellSize)
     ctx.lineTo(offsetX, offsetY + halfCell)
     ctx.fill()
+    if (!this.animations.some(a => a instanceof FoodRayAnimation)) {
+      for (let i = 0; i < 6; i++) {
+        this.animations.push(new FoodRayAnimation(this, {
+          getGridCoord: () => this.getCoordFromIndex(this.world.food),
+          angle: 60 * i,
+        }))
+      }
+    }
   }
   private animationTick(alsoGameTick = false) {
     this.animations = this.animations.filter(anim => !anim.tick(alsoGameTick))
@@ -192,30 +204,24 @@ export class GameController {
     this.drawWorld(!!deadMsg)
     this.drawFood()
     if (deadMsg) {
-      this.lookDead(deadMsg)
+      this.drawSnake(this.isDeadParts)
+      this.lookDead(deadMsg, isGameTick)
     } else {
       this.drawSnake()
     }
   }
-  lookDead(msg: string) {
-    if (!this.isDead) {
-      for (const [idx, dir] of (this.world.snake() as Snake).body) {
-        const {row, col} = this.getCoordFromIndex(idx)
-        this.ctx.clearRect(
-          this.config.gameOffset + col * this.config.cellSize,
-          this.config.gameOffset + row * this.config.cellSize,
-          this.config.cellSize,
-          this.config.cellSize,
-        )
-        this.animations.push(new DeathCellAnimation(this, {
-          coord: {row, col},
-          velocityX: Math.random() * 30 - 15,
-          forceY: .5 + Math.random() * 1,
-          rotateFactor: Math.random() * 2 - 1,
-        }))
-      }
+  lookDead(msg: string, isGameTick: boolean) {
+    const {body} = this.world.snake() as Snake
+    if (isGameTick && this.isDeadParts < body.length) {
+      const idx = body[this.isDeadParts++][0]
+      const {row, col} = this.getCoordFromIndex(idx)
+      this.animations.push(new DeathCellAnimation(this, {
+        gridCoord: {row, col},
+        velocityX: Math.random() * 30 - 15,
+        forceY: .5 + Math.random() * 1,
+        rotateFactor: Math.random() * 2 - 1,
+      }))
     }
-    this.isDead = true
     const {ctx, canvas, config: {
       colors
     }} = this

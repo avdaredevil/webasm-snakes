@@ -42,7 +42,7 @@ impl Snake {
             direction: Direction::Up,
             dead_msg: "".to_string(),
             cell_pos_set,
-            growth_factor: 2,
+            growth_factor: 4,
         }
     }
     pub fn head(&self) -> usize {
